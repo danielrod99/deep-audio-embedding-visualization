@@ -7,19 +7,20 @@ def embeddings_y_taggrams(red,pista,dataset):
     if pista == "":
         pista = '1.mp3'
     if dataset == "":
-        dataset = 'MSD'
+        dataset = MSD_W_MUSICNN
 
-    funcion = embeddings_y_taggrams_MusiCNN
-    ds = MSD_W_MUSICNN
-
-    if red == 'VGG':
-        funcion = embeddings_y_taggrams_VGG
-        if dataset == 'MSD':
-            ds = MSD_W_VGG
-    else:
-        if dataset == 'MTAT':
-            ds=  MTAT_W_MUSICNN
-
+    ds='msd'
     print('Obteniendo embeddings y taggrams para ',red,pista,dataset,"...")
-    embeddings, taggrams = funcion(ds,AUDIO_ROUTE+pista)
+    if red.upper() == 'VGG':
+        if dataset.upper() == 'MSD':
+            dataset = MSD_W_VGG
+        embeddings, taggrams = embeddings_y_taggrams_VGG(dataset,AUDIO_ROUTE+pista)
+    else:
+        if dataset.upper() == 'MTAT':
+            dataset=MTAT_W_MUSICNN
+            ds=  'mtat'
+        else:
+            dataset=MSD_W_MUSICNN
+        embeddings, taggrams = embeddings_y_taggrams_MusiCNN(dataset,AUDIO_ROUTE+pista,dataset_name=ds)
+
     return embeddings, taggrams

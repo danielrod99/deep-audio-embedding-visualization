@@ -36,12 +36,9 @@ def load_and_preprocess(audio_path, sr=SR_MUSICNN):
         
     return torch.from_numpy(y).float()
 
-def embeddings_y_taggrams_MusiCNN(pesos, audio, segment_size=3.0, sr=SR_MUSICNN):
-    if 'msd' in pesos.lower():
-        dataset_name = 'msd'
-    else:
-        dataset_name = 'mtat'
+def embeddings_y_taggrams_MusiCNN(pesos, audio, dataset_name='msd' ,segment_size=3.0, sr=SR_MUSICNN):
 
+    print(pesos, audio, dataset_name)
     model = Musicnn(n_class=N_TAGS, dataset=dataset_name) 
     model.load_state_dict(torch.load(pesos, map_location=DC))
     model.eval()

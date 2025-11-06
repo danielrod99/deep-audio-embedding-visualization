@@ -51,7 +51,7 @@ export const useMakeRequest = () => {
             reqPista = 'pista=' + pista;
         }
         let reqMetodo = ''
-        if (reqMetodo) {
+        if (metodo) {
             reqMetodo = 'metodo=' + metodo
         }
         let params = ''
