@@ -54,7 +54,7 @@ export const Grafica = ({
         }));
 
         setPlotData(updated);
-    }, [tagsSeleccionados, data, taggrams]);
+    }, [tagsSeleccionados, data, taggrams,allTagNames]);
 
     return (
         <div

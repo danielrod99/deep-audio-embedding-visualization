@@ -43,13 +43,13 @@ export const SidePane = ({ listaTags, tags, setTags, canciones, setCanciones, li
                     {listaCanciones.map((lCna, idx) => <option value={lCna} key={idx}>{lCna}</option>)}
                 </Form.Select>
             </div>
-            {progreso != 0 && progreso != 100 &&
+            {progreso !== 0 && progreso !== 100 &&
                 <div>
                     <p>Cargando...</p>
                     <ProgressBar now={progreso} />
                 </div>
             }
-            {(progreso == 0 || progreso == 100) && <Button style={{ marginTop: '10px' }} onClick={cargarDatos}>Aplicar</Button>}
+            {(progreso === 0 || progreso === 100) && <Button style={{ marginTop: '10px' }} onClick={cargarDatos}>Aplicar</Button>}
         </div>
     );
 };
