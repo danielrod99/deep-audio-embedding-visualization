@@ -1,12 +1,11 @@
-import { useState } from 'react';
 import Form from 'react-bootstrap/Form';
 import '../styles/selectorgrafico.css';
 
-export const SelectorGrafico = ({ arquitectura, setArquitectura, dataset, setDataset }) => {
+export const SelectorGrafico = ({ arquitectura, setArquitectura, dataset, setDataset,tipoGrafica,setTipoGrafica }) => {
 
     const handleArquitecturaChange = (e) => {
         setArquitectura(e.target.value);
-        if (e.target.value == 'VGG') {
+        if (e.target.value === 'VGG') {
             setDataset('MSD')
         }
         console.log('Arquitectura seleccionada:', e.target.value);
@@ -39,7 +38,23 @@ export const SelectorGrafico = ({ arquitectura, setArquitectura, dataset, setDat
                     onChange={handleDatasetChange}
                 >
                     <option value="MSD">MSD</option>
-                    {arquitectura == 'MusiCNN' && <option value="MTAT">MTAT</option>}
+                    {arquitectura === 'MusiCNN' && <option value="MTAT">MTAT</option>}
+                </Form.Select>
+            </div>
+            <div>
+                <p>Tipo Grafica</p>
+                <Form.Select
+                    aria-label="Grafica"
+                    value={tipoGrafica}
+                    onChange={(e)=>{
+                        console.log('Tipo Grafica',e.target.value)
+                        setTipoGrafica(e.target.value)
+                    }}
+                >
+                    <option value="pca">PCA</option>
+                    <option value="std-pca">STD-PCA</option>
+                    <option value="tsne">t-SNE</option>
+                    <option value="umap">UMAP</option>
                 </Form.Select>
             </div>
         </div>

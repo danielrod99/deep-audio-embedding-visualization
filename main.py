@@ -8,6 +8,7 @@ from torch.autograd import Variable
 import torchaudio
 from MusiCNN import Musicnn
 from VGG import VGG_Res
+from proyecciones import proyectar_embeddings
 
 MSD_W_MUSICNN = './pesos/msd/musicnn.pth'
 MTAT_W_MUSICNN = './pesos/mtat/musicnn.pth'
@@ -35,83 +36,69 @@ def load_and_preprocess(audio_path, sr=SR_MUSICNN):
         
     return torch.from_numpy(y).float()
 
-def embeddings_y_taggrams_MusiCNN(pesos, audio):
-    
+def embeddings_y_taggrams_MusiCNN(pesos, audio, segment_size=3.0, sr=SR_MUSICNN):
     if 'msd' in pesos.lower():
         dataset_name = 'msd'
-    elif 'mtat' in pesos.lower():
-        dataset_name = 'mtat'
     else:
         dataset_name = 'mtat'
 
     model = Musicnn(n_class=N_TAGS, dataset=dataset_name) 
-    
-    try:
-        model.load_state_dict(torch.load(pesos, map_location=DC))
-    except RuntimeError as e:
-        print(f"\n[ERROR] Error al cargar los pesos. Asegúrate de que Musicnn está definida con los parámetros por defecto de {dataset_name}.")
-        print(f"Detalle: {e}")
-        return None, None
-        
+    model.load_state_dict(torch.load(pesos, map_location=DC))
     model.eval()
 
-    input_tensor = load_and_preprocess(audio)
+    y, _ = librosa.load(audio, sr=sr)
 
-    if input_tensor is None:
-        return None, None
-        
-    input_tensor = input_tensor.unsqueeze(0) 
+    seg_len = int(segment_size * sr)
+    segments = [y[i:i+seg_len] for i in range(0, len(y), seg_len) if len(y[i:i+seg_len]) == seg_len]
+
+    all_embeddings = []
+    all_taggrams = []
 
     with torch.no_grad():
-        taggrams_tensor, embeddings_tensor = model(input_tensor)
-    
-    taggrams = taggrams_tensor.squeeze(0).numpy()
-    embeddings = embeddings_tensor.squeeze(0).numpy()
+        for seg in segments:
+            x = torch.from_numpy(seg).float().unsqueeze(0)
+            taggrams_tensor, embeddings_tensor = model(x)
+            all_embeddings.append(embeddings_tensor.squeeze(0).numpy())
+            all_taggrams.append(taggrams_tensor.squeeze(0).numpy())
+
+
+    embeddings = np.vstack(all_embeddings)  # (n_segmentos, dim)
+    taggrams = np.vstack(all_taggrams)      # (n_segmentos, n_tags)
     
     return embeddings, taggrams
 
-def embeddings_y_taggrams_VGG(pesos, audio):
-    
-    if 'msd' in pesos.lower():
-        dataset_name = 'msd'
-    elif 'mtat' in pesos.lower():
-        dataset_name = 'mtat'
-    else:
-        dataset_name = 'mtat'
-
-    model = VGG_Res(n_class=N_TAGS) 
-    
-    try:
-        model.load_state_dict(torch.load(pesos, map_location=DC))
-    except RuntimeError as e:
-        print(f"\n[ERROR] Error al cargar los pesos. Asegúrate de que VGG_Res está definida con los parámetros por defecto de {dataset_name}.")
-        print(f"Detalle: {e}")
-        return None, None
-        
+def embeddings_y_taggrams_VGG(pesos, audio, segment_size=3.0, sr=SR_MUSICNN):
+    model = VGG_Res(n_class=N_TAGS)
+    model.load_state_dict(torch.load(pesos, map_location=DC))
+    model.to(DC)
     model.eval()
 
-    input_tensor = load_and_preprocess(audio)
+    y, _ = librosa.load(audio, sr=sr)
 
-    if input_tensor is None:
-        return None, None
-        
-    input_tensor = input_tensor.unsqueeze(0) 
+    seg_len = int(segment_size * sr)
+    segments = [y[i:i+seg_len] for i in range(0, len(y), seg_len) if len(y[i:i+seg_len]) == seg_len]
+
+    all_embeddings = []
+    all_taggrams = []
 
     with torch.no_grad():
-        taggrams_tensor, embeddings_tensor = model(input_tensor)
-    
-    taggrams = taggrams_tensor.squeeze(0).numpy()
-    embeddings = embeddings_tensor.squeeze(0).numpy()
+        for seg in segments:
+            x = torch.from_numpy(seg).float().unsqueeze(0).to(DC)  # (1, n_samples)
+            taggrams_tensor, embeddings_tensor = model(x)
+
+            all_embeddings.append(embeddings_tensor.squeeze(0).cpu().numpy())
+            all_taggrams.append(taggrams_tensor.squeeze(0).cpu().numpy())
+
+    embeddings = np.vstack(all_embeddings)
+    taggrams = np.vstack(all_taggrams)
     
     return embeddings, taggrams
 
 
 if __name__ == "__main__":
-    #embeddings, taggrams = embeddings_y_taggrams_VGG(MSD_W_VGG, './audio/1.mp3')
+    embeddings, taggrams = embeddings_y_taggrams_VGG(MSD_W_VGG, './audio/1.mp3')
+    print("Embeddings:", embeddings.shape)
+    print("Taggrams:", taggrams.shape)
 
-    embeddings, taggrams = embeddings_y_taggrams_MusiCNN(MSD_W_MUSICNN, './audio/1.mp3')
-    #embeddings, taggrams = embeddings_y_taggrams_MusiCNN(MTAT_W_MUSICNN, './audio/1.mp3')
-
-    if embeddings is not None:
-        print(f"Dimensiones del Embedding (Penúltima Capa): {embeddings.shape}")
-        print(f"Dimensiones del Taggram (Predicción de Tags): {taggrams.shape}")
+    coords = proyectar_embeddings(embeddings, metodo='umap')
+    print(coords[:5])

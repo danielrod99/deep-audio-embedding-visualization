@@ -1,52 +1,48 @@
-import { useState } from 'react';
 import Form from 'react-bootstrap/Form';
 import '../styles/sidepane.css';
 import Button from 'react-bootstrap/Button';
 
-export const SidePane = ({tags, setTags,canciones, setCanciones, listaCanciones, cargarDatos}) => {
+export const SidePane = ({ listaTags, tags, setTags, canciones, setCanciones, listaCanciones, cargarDatos }) => {
 
-  const handleTagsChange = (e) => {
-    const selectedValues = Array.from(e.target.selectedOptions, (option) => option.value);
-    setTags(selectedValues);
-    console.log('Tags seleccionados:', selectedValues);
-  };
+    const handleTagsChange = (e) => {
+        const selectedValues = Array.from(e.target.selectedOptions, (option) => option.value);
+        setTags(selectedValues);
+        console.log('Tags seleccionados:', selectedValues);
+    };
 
-  const handleCancionesChange = (e) => {
-    const selectedValues = Array.from(e.target.selectedOptions, (option) => option.value);
-    setCanciones(selectedValues);
-    console.log('Canciones seleccionados:', selectedValues);
-  };
+    const handleCancionesChange = (e) => {
+        const selectedValues = Array.from(e.target.selectedOptions, (option) => option.value);
+        setCanciones(selectedValues);
+        console.log('Canciones seleccionados:', selectedValues);
+    };
 
-  return (
-    <div className='sidepane'>
-      <div className='item'>
-        <p>Tags</p>
-        <Form.Select
-          multiple
-          aria-label="Tags"
-          value={tags}
-          onChange={handleTagsChange}
-        >
-          <option value="Rock">Rock</option>
-          <option value="Clasico">Clasico</option>
-          <option value="Pop">Pop</option>
-          <option value="Jazz">Jazz</option>
-        </Form.Select>
-        <Button style={{marginTop:'10px'}} onClick={()=>setTags([])}>Limpiar</Button>
-      </div>
+    return (
+        <div className='sidepane'>
+            <div className='item'>
+                <p>Tags</p>
+                <Form.Select
+                    multiple
+                    aria-label="Tags"
+                    value={tags}
+                    onChange={handleTagsChange}
+                >
+                    {listaTags.map((tag, idx) => <option value={tag} key={idx}>{tag}</option>)}
+                </Form.Select>
+                <Button style={{ marginTop: '10px' }} onClick={() => setTags([])}>Limpiar</Button>
+            </div>
 
-      <div className='item'>
-        <p>Canción</p>
-        <Form.Select
-          multiple
-          aria-label="Cancion"
-          value={canciones}
-          onChange={handleCancionesChange}
-        >
-        {listaCanciones.map((lCna,idx)=><option value={lCna} key={idx}>{lCna}</option>)}
-        </Form.Select>
-      </div>
-      <Button onClick={()=>cargarDatos}>Aplicar</Button>
-    </div>
-  );
+            <div className='item'>
+                <p>Canción</p>
+                <Form.Select
+                    multiple
+                    aria-label="Cancion"
+                    value={canciones}
+                    onChange={handleCancionesChange}
+                >
+                    {listaCanciones.map((lCna, idx) => <option value={lCna} key={idx}>{lCna}</option>)}
+                </Form.Select>
+            </div>
+            <Button onClick={cargarDatos}>Aplicar</Button>
+        </div>
+    );
 };

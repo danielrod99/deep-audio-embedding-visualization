@@ -1,7 +1,8 @@
 from flask import Flask, request
-from main import embeddings_y_taggrams_MusiCNN, embeddings_y_taggrams_VGG, MSD_W_MUSICNN, MTAT_W_MUSICNN,MSD_W_VGG
 from flask_cors import CORS
 import os
+from utils import embeddings_y_taggrams
+from main import TAGS, proyectar_embeddings
 
 AUDIO_ROUTE = './audio/'
 
@@ -11,6 +12,10 @@ CORS(app)
 @app.route("/")
 def hello_world():
     return "<p>Hello, World!</p>"
+
+@app.route("/tags")
+def listar_tags():
+    return TAGS
 
 @app.route("/audios")
 def listar_audios():
@@ -32,27 +37,26 @@ def embedding():
     except:
         print('No se encontro param de:',red,pista,dataset)
     
-    if red == '':
-        red = 'MusiCNN'
-    if pista == "":
-        pista = '1.mp3'
-    if dataset == "":
-        dataset = 'MSD'
-
-    funcion = embeddings_y_taggrams_MusiCNN
-    ds = MSD_W_MUSICNN
-
-    if red == 'VGG':
-        funcion = embeddings_y_taggrams_VGG
-        if dataset == 'MSD':
-            ds = MSD_W_VGG
-    else:
-        if dataset == 'MTAT':
-            ds=  MTAT_W_MUSICNN
-
-    print('Obteniendo embeddings y taggrams...')
-    embeddings, taggrams = funcion(ds,AUDIO_ROUTE+pista)
+    embeddings, taggrams=embeddings_y_taggrams(red,pista,dataset)
     return {
         'embeddings_'+red+"_"+dataset+'_'+pista: embeddings.tolist(),
         'taggrams_'+red+"_"+dataset+'_'+pista: taggrams.tolist()
     }
+
+@app.route('/representacion')
+def representacion():
+    try:
+        red = request.args.get('red', '').lower()
+        pista = request.args.get('pista', '')
+        dataset = request.args.get('dataset', '').lower()
+        metodo = request.args.get('metodo', '').lower()
+    except:
+        print('No se encontro param de:',red,pista,dataset)
+    embeddings, taggrams = embeddings_y_taggrams(red,pista,dataset)
+    print('Metodo',metodo)
+    if metodo == '':
+        metodo = 'umap'
+    coords=proyectar_embeddings(embeddings, metodo=metodo)
+    return {
+            'representacion_'+metodo+'_'+red+"_"+dataset+'_'+pista : coords.tolist()
+    } 
