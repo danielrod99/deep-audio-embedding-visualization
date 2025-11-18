@@ -14,6 +14,7 @@ from main import embeddings_y_taggrams_MusiCNN, embeddings_y_taggrams_VGG
 from proyecciones import proyectar_embeddings
 import numpy as np
 from sklearn.metrics.pairwise import cosine_similarity
+from sklearn.metrics import silhouette_score
 import torch
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
@@ -464,6 +465,34 @@ def compute_genre_similarity_scores():
             emb_agreements = sum(1 for s in song_similarities if s['emb_agreement'])
             tag_agreements = sum(1 for s in song_similarities if s['tag_agreement'])
             
+            # Compute Silhouette scores
+            print(f"\n  Computing Silhouette scores...")
+            
+            # Prepare data for Silhouette score computation
+            embeddings_array = np.array([s['embedding'] for s in song_info])
+            taggrams_array = np.array([s['taggram'] for s in song_info])
+            genre_labels = [s['genre'] for s in song_info]
+            
+            # Compute Silhouette scores (only if we have at least 2 genres with 2+ samples each)
+            unique_genres = set(genre_labels)
+            emb_silhouette = None
+            tag_silhouette = None
+            
+            if len(unique_genres) >= 2:
+                try:
+                    emb_silhouette = float(silhouette_score(embeddings_array, genre_labels, metric='cosine'))
+                    print(f"    Embedding Silhouette score: {emb_silhouette:.4f}")
+                except Exception as e:
+                    print(f"    Warning: Could not compute embedding Silhouette score: {e}")
+                
+                try:
+                    tag_silhouette = float(silhouette_score(taggrams_array, genre_labels, metric='cosine'))
+                    print(f"    Taggram Silhouette score: {tag_silhouette:.4f}")
+                except Exception as e:
+                    print(f"    Warning: Could not compute taggram Silhouette score: {e}")
+            else:
+                print(f"    Skipping Silhouette scores (need at least 2 genres, found {len(unique_genres)})")
+            
             results[combo_key] = {
                 'genre_embedding_centroids': genre_embedding_centroids,
                 'genre_taggram_centroids': genre_taggram_centroids,
@@ -476,12 +505,14 @@ def compute_genre_similarity_scores():
                     'emb_min_similarity': float(np.min(emb_similarities_to_own)) if emb_similarities_to_own else 0.0,
                     'emb_max_similarity': float(np.max(emb_similarities_to_own)) if emb_similarities_to_own else 0.0,
                     'emb_agreement_rate': emb_agreements / len(song_similarities) if song_similarities else 0.0,
+                    'emb_silhouette_score': emb_silhouette,
                     # Taggram stats
                     'tag_mean_similarity_to_own_genre': float(np.mean(tag_similarities_to_own)) if tag_similarities_to_own else 0.0,
                     'tag_std_similarity_to_own_genre': float(np.std(tag_similarities_to_own)) if tag_similarities_to_own else 0.0,
                     'tag_min_similarity': float(np.min(tag_similarities_to_own)) if tag_similarities_to_own else 0.0,
                     'tag_max_similarity': float(np.max(tag_similarities_to_own)) if tag_similarities_to_own else 0.0,
                     'tag_agreement_rate': tag_agreements / len(song_similarities) if song_similarities else 0.0,
+                    'tag_silhouette_score': tag_silhouette,
                     # General stats
                     'total_songs': len(song_similarities)
                 }
@@ -492,9 +523,13 @@ def compute_genre_similarity_scores():
             print(f"      Mean similarity to own genre: {results[combo_key]['aggregate_stats']['emb_mean_similarity_to_own_genre']:.4f}")
             print(f"      Std deviation: {results[combo_key]['aggregate_stats']['emb_std_similarity_to_own_genre']:.4f}")
             print(f"      Agreement rate: {results[combo_key]['aggregate_stats']['emb_agreement_rate']:.2%}")
+            if emb_silhouette is not None:
+                print(f"      Silhouette score: {emb_silhouette:.4f}")
             print(f"    TAGGRAM-BASED:")
             print(f"      Mean similarity to own genre: {results[combo_key]['aggregate_stats']['tag_mean_similarity_to_own_genre']:.4f}")
             print(f"      Std deviation: {results[combo_key]['aggregate_stats']['tag_std_similarity_to_own_genre']:.4f}")
             print(f"      Agreement rate: {results[combo_key]['aggregate_stats']['tag_agreement_rate']:.2%}")
+            if tag_silhouette is not None:
+                print(f"      Silhouette score: {tag_silhouette:.4f}")
     
     return results
