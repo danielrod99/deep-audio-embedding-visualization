@@ -1,4 +1,4 @@
-from flask import Flask, request, g
+from flask import Flask, request, g, send_from_directory
 from flask_cors import CORS
 import os
 import click
@@ -8,6 +8,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'db'))
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'ML'))
 import database
 import preprocessing
+import config
 
 AUDIO_ROUTE = './audio/'
 
@@ -91,6 +92,14 @@ def taggrams():
         'data': taggrams,
     }
 
+@app.route('/audio/<path:filename>')
+def serve_audio(filename):
+    """Serve audio files from the audio directory."""
+    try:
+        return send_from_directory(config.AUDIO_DIR, filename)
+    except Exception as e:
+        print(f"Error serving audio file {filename}: {e}")
+        return {"error": f"Audio file not found: {filename}"}, 404
 
 # ============================================================================
 # Flask CLI Commands for Preprocessing
