@@ -18,7 +18,9 @@ export const Grafica = ({
     allTagNames,
     embeddings,
     visualizar,
-    setVisualizar
+    setVisualizar,
+    agruparPor,
+    setAgruparPor,
 }) => {
     const [plotData, setPlotData] = useState([]);
     const audioRef = useRef(null);
@@ -70,6 +72,8 @@ export const Grafica = ({
                 setTipoGrafica={setTipoGrafica}
                 visualizar={visualizar}
                 setVisualizar={setVisualizar}
+                agruparPor={agruparPor}
+                setAgruparPor={setAgruparPor}
             />
 
             <div className="grafica">
