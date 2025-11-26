@@ -1,6 +1,7 @@
 # Deep Learning frameworks
 torch>=2.0.0
 torchaudio>=2.0.0
+torchvggish>=0.2
 
 # Transformers for MERT model
 transformers>=4.30.0
@@ -19,6 +20,13 @@ umap-learn>=0.5.3
 Flask>=2.3.0
 flask-cors>=4.0.0
 click>=8.1.0
+
+# training
+tensorboard>=2.20.0
+pandas>=2.3.3
+
+# Progress bar
+tqdm>=4.65.0
 
 # Database
 # sqlite3 is included in Python standard library

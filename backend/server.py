@@ -30,7 +30,7 @@ def listar_audios():
 @app.route("/tags")
 def listar_tags():
     genre_map = database.get_tags()
-    return list(genre_map.values())
+    return list(set(genre_map.values()))
 
 @app.route('/embeddings')
 def embedding():

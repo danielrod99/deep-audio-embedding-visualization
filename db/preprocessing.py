@@ -10,11 +10,11 @@ from flask import g
 from tqdm import tqdm
 import config
 import database
-from main import embeddings_y_taggrams_MusiCNN, embeddings_y_taggrams_VGG, embeddings_y_taggrams_Whisper, embeddings_y_taggrams_MERT
-from proyecciones import proyectar_embeddings
+from main import embeddings_y_taggrams_MusiCNN, embeddings_y_taggrams_VGG, embeddings_y_taggrams_Whisper, embeddings_y_taggrams_MERT, embeddings_y_taggrams_WhisperContrastive, embeddings_y_taggrams_VGGish
 import numpy as np
 from sklearn.metrics.pairwise import cosine_similarity
 import torch
+import gc
 from db.utils import process_model_dataset_combination
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
@@ -117,6 +117,14 @@ def extract_embeddings_for_track(track_id, model, dataset):
         elif model == 'mert':
             # For MERT, weights_path is the model name (e.g., '95m', '330m')
             embeddings, taggrams = embeddings_y_taggrams_MERT(
+                weights_path, audio_path
+            )
+        elif model == 'whisper_contrastive':
+            embeddings, taggrams = embeddings_y_taggrams_WhisperContrastive(
+                weights_path, audio_path
+            )
+        elif model == 'vggish':
+            embeddings, taggrams = embeddings_y_taggrams_VGGish(
                 weights_path, audio_path
             )
         else:
@@ -315,7 +323,14 @@ def compute_genre_similarity_scores():
         combo_key = f"{model}_{dataset}"
         result = process_model_dataset_combination(model, dataset, genre_map, genre_tags)
         if result is not None:
-            results[combo_key] = result
+            results[combo_key] = {
+                'aggregate_stats': result['aggregate_stats']
+            }
+            del result
+
+        gc.collect()
+        if torch.cuda.is_available():
+            torch.cuda.empty_cache()
     
     # Process transformer models (whisper, mert) with their model sizes
     for i, model in enumerate(config.TRANF_MODELS):
@@ -323,6 +338,13 @@ def compute_genre_similarity_scores():
         combo_key = f"{model}_{model_size}"
         result = process_model_dataset_combination(model, model_size, genre_map, genre_tags)
         if result is not None:
-            results[combo_key] = result
+            results[combo_key] = {
+                'aggregate_stats': result['aggregate_stats']
+            }
+            del result
+        
+        gc.collect()
+        if torch.cuda.is_available():
+            torch.cuda.empty_cache()
     
     return results
