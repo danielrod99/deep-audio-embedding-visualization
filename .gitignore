@@ -262,10 +262,10 @@ temp/
 
 /audio
 selected_songs.csv
-.venv/ML/checkpoints/**/*.pth
-ML/pesos/**/*.pth
 
 # Large model checkpoint files
 ML/checkpoints/**/*.pth
 ML/pesos/**/*.pth
 *.pth
+ML/models/.locks
+ML/models/models--m-a-p--MERT-v1-95M
