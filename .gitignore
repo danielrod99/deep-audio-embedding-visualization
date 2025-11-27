@@ -264,3 +264,8 @@ temp/
 selected_songs.csv
 .venv/ML/checkpoints/**/*.pth
 ML/pesos/**/*.pth
+
+# Large model checkpoint files
+ML/checkpoints/**/*.pth
+ML/pesos/**/*.pth
+*.pth
